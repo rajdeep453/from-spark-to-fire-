@@ -1,0 +1,182 @@
+[
+  {
+    "id": "mmlu_001",
+    "name": "Physics - Angular Momentum",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What condition ensures angular momentum is conserved?",
+    "scenario": "mmlu",
+    "ground_truth": "Zero net external torque",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU high_school_physics"
+  },
+  {
+    "id": "mmlu_002",
+    "name": "Chemistry - Lanthanide Contraction",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: How do atomic radii change across lanthanides from La to Lu?",
+    "scenario": "mmlu",
+    "ground_truth": "Atomic radii decrease (lanthanide contraction)",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU college_chemistry"
+  },
+  {
+    "id": "mmlu_003",
+    "name": "Biology - Recombinant DNA",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Is translation a method to form recombinant DNA?",
+    "scenario": "mmlu",
+    "ground_truth": "No, translation is protein synthesis, not DNA recombination",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU high_school_biology"
+  },
+  {
+    "id": "mmlu_004",
+    "name": "World Religions - Jewish Covenant",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is the sign of the covenant for Jewish males?",
+    "scenario": "mmlu",
+    "ground_truth": "Circumcision (brit milah)",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU world_religions"
+  },
+  {
+    "id": "mmlu_005",
+    "name": "History - Mandate of Heaven",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Which Chinese dynasty developed the Mandate of Heaven concept?",
+    "scenario": "mmlu",
+    "ground_truth": "Zhou dynasty",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU world_religions"
+  },
+  {
+    "id": "mmlu_006",
+    "name": "Computer Security - SHA-1",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is the message digest length of SHA-1?",
+    "scenario": "mmlu",
+    "ground_truth": "160 bits",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU computer_security"
+  },
+  {
+    "id": "mmlu_007",
+    "name": "Computer Security - Heartbleed",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What type of vulnerability is the Heartbleed bug?",
+    "scenario": "mmlu",
+    "ground_truth": "Buffer over-read (read outside bounds of a buffer)",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU computer_security"
+  },
+  {
+    "id": "mmlu_008",
+    "name": "Astronomy - Short-period Comets",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Where do most short-period comets come from?",
+    "scenario": "mmlu",
+    "ground_truth": "The Kuiper belt",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU astronomy"
+  },
+  {
+    "id": "mmlu_009",
+    "name": "Astronomy - Mars Color",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Why is Mars red?",
+    "scenario": "mmlu",
+    "ground_truth": "Iron oxide (rust) on the surface",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU astronomy"
+  },
+  {
+    "id": "mmlu_010",
+    "name": "Philosophy - Psychological Egoism",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is psychological egoism?",
+    "scenario": "mmlu",
+    "ground_truth": "A claim about human nature that people always act in self-interest",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU philosophy"
+  },
+  {
+    "id": "mmlu_011",
+    "name": "Logic - Ad Hominem",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What fallacy is attacking the character of an arguer instead of their argument?",
+    "scenario": "mmlu",
+    "ground_truth": "Ad hominem (argument against the person)",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU logical_fallacies"
+  },
+  {
+    "id": "mmlu_012",
+    "name": "Logic - Composition Fallacy",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What fallacy assumes what is true of parts must be true of the whole?",
+    "scenario": "mmlu",
+    "ground_truth": "Fallacy of Composition",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU logical_fallacies"
+  },
+  {
+    "id": "mmlu_013",
+    "name": "Economics - Price Ceiling",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What happens when a price ceiling is set below equilibrium price?",
+    "scenario": "mmlu",
+    "ground_truth": "A shortage occurs",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU high_school_microeconomics"
+  },
+  {
+    "id": "mmlu_014",
+    "name": "Economics - Oligopoly",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is a defining characteristic of oligopoly?",
+    "scenario": "mmlu",
+    "ground_truth": "A few large producers",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU high_school_microeconomics"
+  },
+  {
+    "id": "mmlu_015",
+    "name": "Nutrition - Diabetes Medication",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is the first-line drug for type 2 diabetes with obesity?",
+    "scenario": "mmlu",
+    "ground_truth": "Metformin",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU nutrition"
+  },
+  {
+    "id": "mmlu_016",
+    "name": "Algebra - Ring Characteristic",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: What is the characteristic of the ring 2Z?",
+    "scenario": "mmlu",
+    "ground_truth": "0",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU abstract_algebra"
+  },
+  {
+    "id": "mmlu_017",
+    "name": "Algebra - Cyclic Subgroup",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Does every element of a group generate a cyclic subgroup?",
+    "scenario": "mmlu",
+    "ground_truth": "Yes, every element generates a cyclic subgroup",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU abstract_algebra"
+  },
+  {
+    "id": "mmlu_018",
+    "name": "Physics - Standing Waves",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: At the closed end of a pipe with standing waves, is pressure at a node or antinode?",
+    "scenario": "mmlu",
+    "ground_truth": "Pressure is at an antinode",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU high_school_physics"
+  },
+  {
+    "id": "mmlu_019",
+    "name": "Philosophy - Upanishads",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: How are the Upanishads best characterized in Hindu literature?",
+    "scenario": "mmlu",
+    "ground_truth": "Philosophical texts",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU philosophy"
+  },
+  {
+    "id": "mmlu_020",
+    "name": "History - Meiji Japan",
+    "description": "Use the knowledge API at https://api.wikipedia.org/ to find: Which Japanese government promoted a national cult based on the emperor and kami?",
+    "scenario": "mmlu",
+    "ground_truth": "Meiji government",
+    "resource_url": "https://api.wikipedia.org/",
+    "data_source": "MMLU world_religions"
+  }
+]

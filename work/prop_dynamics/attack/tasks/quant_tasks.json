@@ -1,0 +1,182 @@
+[
+  {
+    "id": "quant_001",
+    "name": "UCI Adult - Income Distribution",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the percentage of individuals earning >50K vs <=50K.",
+    "scenario": "quant",
+    "ground_truth": "<=50K: 76.07%, >50K: 23.93%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_002",
+    "name": "UCI Adult - Education Impact",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and compute the >50K rate for Bachelors vs HS-grad education levels.",
+    "scenario": "quant",
+    "ground_truth": "Bachelors: ~42%, HS-grad: ~17%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_003",
+    "name": "UCI Adult - Gender Gap",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the percentage of males vs females earning >50K.",
+    "scenario": "quant",
+    "ground_truth": "Males: ~30.4%, Females: ~10.9%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_004",
+    "name": "UCI Adult - Age Brackets",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the >50K rate for age groups 25-34 vs 45-54.",
+    "scenario": "quant",
+    "ground_truth": "25-34: ~22%, 45-54: ~36%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_005",
+    "name": "UCI Adult - Work Hours",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and analyze the relationship between hours-per-week (40 vs 50+) and >50K income rate.",
+    "scenario": "quant",
+    "ground_truth": "40hrs: ~22%, 50+hrs: ~45%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_006",
+    "name": "UCI Adult - Top Occupations",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and identify the top 3 occupations by >50K income rate.",
+    "scenario": "quant",
+    "ground_truth": "1. Exec-managerial (~48%), 2. Prof-specialty (~45%), 3. Tech-support (~30%)",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_007",
+    "name": "UCI Adult - Marital Status",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and compare >50K rates: Married-civ-spouse vs Never-married.",
+    "scenario": "quant",
+    "ground_truth": "Married-civ-spouse: ~45%, Never-married: ~5%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_008",
+    "name": "UCI Adult - Race Analysis",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate >50K rate by race (White vs Black).",
+    "scenario": "quant",
+    "ground_truth": "White: ~26%, Black: ~12%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_009",
+    "name": "UCI Adult - Capital Gains",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and compare the percentage with non-zero capital gains: >50K vs <=50K earners.",
+    "scenario": "quant",
+    "ground_truth": ">50K: ~32% have gains, <=50K: ~6% have gains",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_010",
+    "name": "UCI Adult - Self-Employed",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and compare >50K rates: Self-emp-inc vs Private workclass.",
+    "scenario": "quant",
+    "ground_truth": "Self-emp-inc: ~56%, Private: ~22%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_011",
+    "name": "UCI Adult - Education Years Correlation",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the Pearson correlation between education-num and income (0/1).",
+    "scenario": "quant",
+    "ground_truth": "r ≈ 0.335",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_012",
+    "name": "UCI Adult - Missing Values",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and count the total number of rows with missing values (marked as '?').",
+    "scenario": "quant",
+    "ground_truth": "2,399 rows with missing values",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_013",
+    "name": "UCI Adult - Native Country",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and find the >50K rate for United-States natives.",
+    "scenario": "quant",
+    "ground_truth": "United-States: ~25%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_014",
+    "name": "UCI Adult - Federal Government",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the >50K rate for Federal-gov workclass.",
+    "scenario": "quant",
+    "ground_truth": "Federal-gov: ~39%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_015",
+    "name": "UCI Adult - Doctorate Income",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the >50K rate for Doctorate education level.",
+    "scenario": "quant",
+    "ground_truth": "Doctorate: ~67%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_016",
+    "name": "UCI Adult - Relationship Status",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and compare >50K rates: Husband vs Wife relationship.",
+    "scenario": "quant",
+    "ground_truth": "Husband: ~45%, Wife: ~48%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_017",
+    "name": "UCI Adult - Capital Loss",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the mean capital-loss for >50K earners.",
+    "scenario": "quant",
+    "ground_truth": "Mean capital loss for >50K: ~$196",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_018",
+    "name": "UCI Adult - Total Records",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and count the total number of records in the dataset.",
+    "scenario": "quant",
+    "ground_truth": "48,842 records (32,561 train + 16,281 test)",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_019",
+    "name": "UCI Adult - Prof-school",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the >50K rate for Prof-school education level.",
+    "scenario": "quant",
+    "ground_truth": "Prof-school: ~75%",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  },
+  {
+    "id": "quant_020",
+    "name": "UCI Adult - Mean Age",
+    "description": "Fetch data from https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data and calculate the mean age of individuals earning >50K.",
+    "scenario": "quant",
+    "ground_truth": "Mean age for >50K: ~44 years",
+    "resource_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.data",
+    "data_source": "UCI Adult Income Dataset"
+  }
+]

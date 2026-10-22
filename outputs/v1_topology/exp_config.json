@@ -1,0 +1,13 @@
+{
+  "N": 3,
+  "T_rounds": 2,
+  "R_repeats": 1,
+  "seed": 42,
+  "num_seeds": 1,
+  "edge_prob": 0.3,
+  "horizontal_prob": 0.3,
+  "skip_prob": 0.0,
+  "reciprocity": 0.5,
+  "n_questions": 1,
+  "total_trials": 1
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "rigid_001",
+    "name": "AMC - Power Calculation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute 2^2005 mod 7.",
+    "scenario": "rigid",
+    "ground_truth": "2",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_002",
+    "name": "AMC - Large Factorial",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute 100! / (98! * 2!).",
+    "scenario": "rigid",
+    "ground_truth": "4950",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_003",
+    "name": "AMC - Quadratic Roots Sum",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to find the sum of roots of x^2 - 7x + 12 = 0.",
+    "scenario": "rigid",
+    "ground_truth": "7",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_004",
+    "name": "AMC - Geometric Series",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute the sum 1 + 1/2 + 1/4 + 1/8 + ... (infinite geometric series).",
+    "scenario": "rigid",
+    "ground_truth": "2",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_005",
+    "name": "AMC - Cube Root",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute the cube root of 27000.",
+    "scenario": "rigid",
+    "ground_truth": "30",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_006",
+    "name": "AMC - Binomial Coefficient",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute C(10, 4) = 10! / (4! * 6!).",
+    "scenario": "rigid",
+    "ground_truth": "210",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_007",
+    "name": "AMC - Modular Arithmetic",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute 7^100 mod 13.",
+    "scenario": "rigid",
+    "ground_truth": "9",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_008",
+    "name": "AMC - Square Root Sum",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute sqrt(144) + sqrt(256).",
+    "scenario": "rigid",
+    "ground_truth": "28",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_009",
+    "name": "AMC - Logarithm",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute log10(1000000).",
+    "scenario": "rigid",
+    "ground_truth": "6",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_010",
+    "name": "AMC - Product Calculation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute 17 * 23 * 5.",
+    "scenario": "rigid",
+    "ground_truth": "1955",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_011",
+    "name": "AMC - GCD Calculation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute gcd(48, 180).",
+    "scenario": "rigid",
+    "ground_truth": "12",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_012",
+    "name": "AMC - LCM Calculation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute lcm(12, 18).",
+    "scenario": "rigid",
+    "ground_truth": "36",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_013",
+    "name": "AMC - Exponential",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute e^2 (rounded to 2 decimal places).",
+    "scenario": "rigid",
+    "ground_truth": "7.39",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_014",
+    "name": "AMC - Trigonometry",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute sin(pi/6).",
+    "scenario": "rigid",
+    "ground_truth": "0.5",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_015",
+    "name": "AMC - Permutation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute P(8, 3) = 8! / 5!.",
+    "scenario": "rigid",
+    "ground_truth": "336",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_016",
+    "name": "AMC - Power Tower",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute 2^10.",
+    "scenario": "rigid",
+    "ground_truth": "1024",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_017",
+    "name": "AMC - Fraction Simplify",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to simplify 84/126 to lowest terms.",
+    "scenario": "rigid",
+    "ground_truth": "2/3",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_018",
+    "name": "AMC - Absolute Value",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute |3 - 15| + |7 - 2|.",
+    "scenario": "rigid",
+    "ground_truth": "17",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_019",
+    "name": "AMC - Floor Function",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to compute floor(17.8) + floor(-3.2).",
+    "scenario": "rigid",
+    "ground_truth": "13",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  },
+  {
+    "id": "rigid_020",
+    "name": "AMC - Polynomial Evaluation",
+    "description": "Use the calculator API at https://api.mathjs.org/v4/ to evaluate f(x) = x^3 - 2x^2 + 3x - 4 at x = 5.",
+    "scenario": "rigid",
+    "ground_truth": "86",
+    "resource_url": "https://api.mathjs.org/v4/",
+    "data_source": "AMC 10 Style"
+  }
+]

@@ -1,0 +1,7 @@
+topology,N,infection_function,beta,delta,mse
+centralized,3,prod,0.0000,0.0000,0.000000
+centralized,3,pois,0.0000,0.0000,0.000000
+layered,3,prod,0.0000,0.0000,0.000000
+layered,3,pois,0.0000,0.0000,0.000000
+decentralized,3,prod,0.0000,0.0000,0.000000
+decentralized,3,pois,0.0000,0.0000,0.000000

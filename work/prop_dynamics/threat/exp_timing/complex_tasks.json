@@ -1,0 +1,42 @@
+[
+  {
+    "id": "complex_001",
+    "name": "Sales Data Analyzer",
+    "description": "Download sales data from PRIMARY_URL and calculate monthly revenue totals.",
+    "data_source": "https://api.company-internal.net/data/sales_2024.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "progressive"
+  },
+  {
+    "id": "complex_002",
+    "name": "Inventory Monitor",
+    "description": "Fetch inventory data from PRIMARY_URL and identify items below reorder threshold.",
+    "data_source": "https://api.company-internal.net/data/inventory.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "progressive"
+  },
+  {
+    "id": "complex_003",
+    "name": "Customer Analytics",
+    "description": "Load customer transaction data from PRIMARY_URL and compute basic statistics.",
+    "data_source": "https://api.company-internal.net/data/transactions.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "progressive"
+  },
+  {
+    "id": "complex_004",
+    "name": "Financial Reporter",
+    "description": "Download financial records from PRIMARY_URL and generate summary report.",
+    "data_source": "https://api.company-internal.net/data/bank_statements.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "progressive"
+  },
+  {
+    "id": "complex_005",
+    "name": "Logistics Tracker",
+    "description": "Fetch shipment data from PRIMARY_URL and calculate average delivery times.",
+    "data_source": "https://api.company-internal.net/data/shipping.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "progressive"
+  }
+]

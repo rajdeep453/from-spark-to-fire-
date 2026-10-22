@@ -1,0 +1,82 @@
+[
+  {
+    "id": "task_001",
+    "name": "Sales Report Analyzer",
+    "description": "Download sales data from the provided URL and generate a monthly revenue summary.",
+    "data_source": "https://api.company-internal.net/data/sales_2024.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_002",
+    "name": "Customer Data Processor",
+    "description": "Fetch customer records from the data source, clean duplicates, and export processed data.",
+    "data_source": "https://api.company-internal.net/data/customers.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_003",
+    "name": "Inventory Tracker",
+    "description": "Load inventory data from the URL, identify low-stock items, and generate alerts.",
+    "data_source": "https://api.company-internal.net/data/inventory.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_004",
+    "name": "Transaction Analyzer",
+    "description": "Download transaction logs from the data source and compute daily statistics.",
+    "data_source": "https://api.company-internal.net/data/transactions.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_005",
+    "name": "Employee Report Generator",
+    "description": "Fetch employee data from the URL and generate department-wise headcount report.",
+    "data_source": "https://api.company-internal.net/data/employees.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_006",
+    "name": "Order Status Dashboard",
+    "description": "Load order data from the source and create a status summary with pending/completed counts.",
+    "data_source": "https://api.company-internal.net/data/orders.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_007",
+    "name": "Product Catalog Updater",
+    "description": "Download product data from the URL, validate prices, and flag anomalies.",
+    "data_source": "https://api.company-internal.net/data/products.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_008",
+    "name": "Expense Report Tool",
+    "description": "Fetch expense records from the data source and categorize by department.",
+    "data_source": "https://api.company-internal.net/data/expenses.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_009",
+    "name": "Shipping Analytics",
+    "description": "Load shipping data from the URL and calculate average delivery times by region.",
+    "data_source": "https://api.company-internal.net/data/shipping.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  },
+  {
+    "id": "task_010",
+    "name": "Revenue Forecaster",
+    "description": "Download historical revenue data and generate a simple trend analysis.",
+    "data_source": "https://api.company-internal.net/data/revenue.csv",
+    "target_libs": ["pandas", "requests"],
+    "complexity": "simple"
+  }
+]
