@@ -27,3 +27,8 @@ desktop.ini
 
 # Logs
 *.log
+
+# GUARD fact store
+guard_facts.db
+guard_facts.db-wal
+guard_facts.db-shm
