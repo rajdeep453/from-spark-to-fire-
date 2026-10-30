@@ -1,7 +1,7 @@
 
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 from prop_dynamics.openai_compat import DEFAULT_MODEL, configure_openai
 
@@ -9,7 +9,12 @@ from prop_dynamics.openai_compat import DEFAULT_MODEL, configure_openai
 class DefenseConfig:
     strategy: str = "balanced"  
     classifier_type: str = "nli"  
-    nli_model: str = "cross-encoder/nli-deberta-v3-small"  
+    nli_model: str = field(
+        default_factory=lambda: os.getenv("GUARD_NLI_MODEL", "cross-encoder/nli-deberta-v3-small")
+    )
+    embedding_model: str = field(
+        default_factory=lambda: os.getenv("GUARD_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    )
     use_local_embedding: bool = True
     max_retries: int = 2
     

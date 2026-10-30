@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 from datetime import datetime
 
-from .config import ThreatConfig
+from .config import ThreatConfig, stable_seed
 from .payload import create_injection_config
 from .detector import InfectionDetector, compute_metrics
 from .crewai_adapter import CrewAIAdapter
@@ -42,6 +42,7 @@ def run_exp2(
     for fw_name in frameworks:
         fw_info = STAR_FRAMEWORKS[fw_name]
         config = ThreatConfig(framework=fw_name, n_tasks=n_tasks, n_repeats=n_repeats)
+        base_seed = config.seed
         
         for group in ["hub", "leaf"]:
             target_agent = fw_info[group]
@@ -51,7 +52,8 @@ def run_exp2(
             
             for task in tqdm(tasks, desc=f"{fw_name}-{group}"):
                 for r in range(n_repeats):
-                    seed = config.seed + hash(task.id) + r
+                    seed = stable_seed(base_seed, task.id, r)
+                    config.seed = seed
                     injection = create_injection_config(task, target_agent, seed)
                     log = adapter.run_task(task, injection)
                     
@@ -92,7 +94,8 @@ def run_exp2(
     with open(os.path.join(output_dir, "exp2_results.json"), "w") as f:
         json.dump({
             "timestamp": datetime.now().isoformat(),
-            "config": {"n_tasks": n_tasks, "n_repeats": n_repeats, "frameworks": frameworks},
+            "config": {"n_tasks": n_tasks, "n_repeats": n_repeats, "frameworks": frameworks,
+                       "base_seed": base_seed},
             "results": all_results,
             "impact_factors": impact_factors
         }, f, indent=2)

@@ -1,6 +1,14 @@
-"""Message Guard: a small API around the defense middleware.
+"""GUARD message screening and fact-store integration for Propagation Dynamics."""
 
-Adds two things on top of the original project:
-  * a persistent store of trusted facts (SQLite) that survives restarts
-  * an explain endpoint that shows which trusted fact a claim was compared with
-"""
+from .explain import explain_claim, explain_result
+from .fact_store import FactStore
+
+
+def create_app(*args, **kwargs):
+    """Create the optional HTTP app without importing FastAPI at package load."""
+    from .app import create_app as app_factory
+
+    return app_factory(*args, **kwargs)
+
+
+__all__ = ["FactStore", "create_app", "explain_claim", "explain_result"]

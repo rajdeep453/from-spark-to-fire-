@@ -2,10 +2,11 @@
 
 import json
 import os
+from dataclasses import replace
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from datetime import datetime
-from ..config import ThreatConfig
+from ..config import ThreatConfig, stable_seed
 from ..payload import create_injection_config
 from ..run_exp1 import load_tasks
 from .metagpt_cyclic import MetaGPTCyclicAdapter
@@ -13,9 +14,10 @@ from .metagpt_cyclic import MetaGPTCyclicAdapter
 
 def run_single_task(args):
     timing, task, repeat_idx, config = args
-    adapter = MetaGPTCyclicAdapter(config, n_iterations=2)
+    seed = stable_seed(config.seed, task.id, repeat_idx)
+    trial_config = replace(config, seed=seed)
+    adapter = MetaGPTCyclicAdapter(trial_config, n_iterations=2)
     entry_agent = adapter.get_agents()[0].name
-    seed = config.seed + hash(task.id) + repeat_idx
     injection = create_injection_config(task, entry_agent, seed)
     log = adapter.run_task(task, injection, intervention_round=timing)
     
@@ -147,7 +149,7 @@ def run_timing_exp(n_tasks=5, n_repeats=3, timings=None, output_dir="outputs/thr
     
     with open(os.path.join(output_dir, "timing_results.json"), "w") as f:
         json.dump({"timestamp": datetime.now().isoformat(),
-                   "config": {"n_tasks": n_tasks, "n_repeats": n_repeats, "timings": timings, 
+                   "config": {"n_tasks": n_tasks, "n_repeats": n_repeats, "base_seed": 42, "timings": timings,
                              "framework": "metagpt_cyclic", "iterations": 2, "max_workers": max_workers},
                    "results": all_results}, f, indent=2)
     

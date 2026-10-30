@@ -4,7 +4,7 @@ import os
 from tqdm import tqdm
 from datetime import datetime
 
-from .config import ThreatConfig
+from .config import ThreatConfig, stable_seed
 from .base_framework import Task
 from .payload import create_injection_config
 from .detector import InfectionDetector, compute_metrics
@@ -60,13 +60,15 @@ def run_exp1(
     for fw_name in frameworks:
         print(f"\n=== Framework: {fw_name} ===")
         config = ThreatConfig(framework=fw_name, n_tasks=n_tasks, n_repeats=n_repeats)
+        base_seed = config.seed
         adapter = create_adapter(fw_name, config)
         entry_agent = adapter.get_entry_agent()
         fw_results = []
         
         for task in tqdm(tasks, desc=fw_name):
             for r in range(n_repeats):
-                seed = config.seed + hash(task.id) + r
+                seed = stable_seed(base_seed, task.id, r)
+                config.seed = seed
                 injection = create_injection_config(task, entry_agent, seed)
                 log = adapter.run_task(task, injection)
                 
@@ -91,7 +93,7 @@ def run_exp1(
     
     with open(os.path.join(output_dir, "exp1_results.json"), "w") as f:
         json.dump({"timestamp": datetime.now().isoformat(),
-                   "config": {"n_tasks": n_tasks, "n_repeats": n_repeats},
+                   "config": {"n_tasks": n_tasks, "n_repeats": n_repeats, "base_seed": base_seed},
                    "results": all_results}, f, indent=2)
     
     print(f"\nResults saved to {output_dir}")

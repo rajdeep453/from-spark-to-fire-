@@ -1,4 +1,9 @@
-fastapi
-uvicorn
-pytest
-httpx
+# Runtime and test dependencies actually needed by the GUARD API.
+numpy>=1.24,<3
+openai>=1.0,<2
+sentence-transformers>=2.2.2,<7
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+pydantic>=2.8,<3
+httpx>=0.27,<1
+pytest>=9.0.3,<10

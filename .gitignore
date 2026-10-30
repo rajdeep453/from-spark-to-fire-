@@ -28,6 +28,9 @@ desktop.ini
 # Logs
 *.log
 
+# Generated experiment artifacts (already-tracked reference results stay tracked)
+outputs/
+
 # GUARD fact store
 guard_facts.db
 guard_facts.db-wal
