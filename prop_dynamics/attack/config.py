@@ -32,8 +32,8 @@ class AttackConfig:
     
     log_debug_prompts: bool = False
     
-    api_key: Optional[str] = "your_api_key"
-    proxy: Optional[str] = "your_proxy_url"
+    api_key: Optional[str] = None
+    proxy: Optional[str] = None
     
     seed: int = 42
     

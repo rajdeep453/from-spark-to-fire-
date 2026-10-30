@@ -1,9 +1,12 @@
 import os
+import logging
 """Verifier."""
 
 from enum import Enum
 from typing import List, Optional, Tuple, Callable, TYPE_CHECKING
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .genealogy_graph import GenealogyGraph
@@ -85,7 +88,7 @@ class ExternalVerifier:
     def _get_from_cache(self, claim: str) -> Optional[VerificationOutput]:
         if not self.enable_cache:
             return None
-        return self._cache.get(claim)
+        return self._cache.get(self._cache_key(claim))
     
     def _add_to_cache(self, claim: str, result: VerificationOutput):
         if not self.enable_cache:
@@ -95,13 +98,19 @@ class ExternalVerifier:
             first_key = next(iter(self._cache))
             self._cache.pop(first_key)
             
-        self._cache[claim] = result
+        self._cache[self._cache_key(claim)] = result
     
     def set_knowledge_base(self, graph: 'GenealogyGraph'):
         self._knowledge_base = graph
+        self._cache.clear()
     
     def set_external_search_func(self, func: Callable):
         self._external_search_func = func
+        self._cache.clear()
+
+    def _cache_key(self, claim: str):
+        graph = self._knowledge_base
+        return (claim, id(graph), getattr(graph, "version", None))
     
     def _search(self, query: str) -> List[Tuple[str, str]]:
         results = []
@@ -177,21 +186,21 @@ class ExternalVerifier:
             ]
             result_text, tokens = call_llm(self._openai, self.model, messages, 0.1, 50)
             self.tokens_used += tokens
-            result_text = result_text.upper()
+            result_label = result_text.strip().upper()
             
-            if "SUPPORTED" in result_text:
+            if result_label == "SUPPORTED":
                 res = VerificationOutput(VerifyResult.SUPPORTED, all_evidence_list, sources, 0.85, "Evidence supports claim")
-            elif "CONTRADICTED" in result_text:
+            elif result_label == "CONTRADICTED":
                 res = VerificationOutput(VerifyResult.CONTRADICTED, all_evidence_list, sources, 0.85, "Evidence contradicts claim")
             else:
                 res = VerificationOutput(VerifyResult.NOT_ENOUGH_INFO, all_evidence_list, sources, 0.5, "Insufficient evidence")
-            
-            with open("verify_debug.log", "a", encoding="utf-8") as f:
-                f.write(f"\n--- Verification Process ---\n")
-                f.write(f"Claim: {claim}\n")
-                f.write(f"Evidence from KB:\n{evidence_text}\n")
-                f.write(f"LLM Judgment: {result_text}\n")
-                f.write("-" * 30 + "\n")
+
+            # Never persist raw claims, evidence, or model output in an
+            # implicit debug file. These values may contain sensitive data.
+            logger.debug(
+                "Verifier completed: result=%s evidence_count=%d",
+                res.result.value, len(all_evidence_list),
+            )
             
             self._add_to_cache(claim, res)
             return res

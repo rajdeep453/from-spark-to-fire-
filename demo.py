@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import time
+import subprocess
 
 # Ensure project root is in sys.path
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -157,7 +158,10 @@ def main():
         demo_live_agent_run()
     elif choice == "3":
         print("\nRe-generating presentation assets...")
-        os.system(f'"{sys.executable}" scripts/create_presentation.py presentation.pptx')
+        subprocess.run(
+            [sys.executable, os.path.join(PROJECT_ROOT, "scripts", "create_presentation.py"), "presentation.pptx"],
+            check=True,
+        )
         print("[✓] presentation.pptx updated.")
         print("[✓] presentation.html is ready.")
     else:

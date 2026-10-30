@@ -59,16 +59,8 @@ class AtomicDecomposer:
         self._init_executor()
 
     def _ensure_nltk(self):
-        if HAS_NLTK:
-            try:
-                import nltk
-                try:
-                    nltk.data.find('tokenizers/punkt')
-                except LookupError:
-                    nltk.download('punkt', quiet=True)
-                    nltk.download('punkt_tab', quiet=True)
-            except Exception:
-                pass
+        """Keep construction offline; sentence splitting has a local fallback."""
+        return None
     
     def _init_executor(self):
         with AtomicDecomposer._executor_lock:
@@ -136,7 +128,7 @@ class AtomicDecomposer:
                 try:
                     sents = sent_tokenize(para)
                 except Exception:
-                    sents = [para]
+                    sents = re.split(r'(?<=[.!?])\s+(?=[A-Z])', para)
             else:
                 sents = re.split(r'(?<=[.!?])\s+(?=[A-Z])', para)
             
@@ -187,9 +179,8 @@ class AtomicDecomposer:
     
     def _decompose_single(self, sentence: str) -> tuple:
         if self.enable_cache:
-            sent_hash = hash(sentence)
-            if sent_hash in self._cache:
-                return self._cache[sent_hash], 0
+            if sentence in self._cache:
+                return self._cache[sentence], 0
 
         try:
             msgs = [
@@ -207,7 +198,7 @@ class AtomicDecomposer:
                     result = [parsed[0].strip()]
             
             if self.enable_cache:
-                self._cache[sent_hash] = result
+                self._cache[sentence] = result
             
             return result, tokens
         except Exception:
@@ -230,7 +221,7 @@ class SimpleDecomposer:
                 try:
                     sents = sent_tokenize(para)
                 except Exception:
-                    sents = [para]
+                    sents = re.split(r'(?<=[.!?])\s+(?=[A-Z])', para)
             else:
                 sents = re.split(r'(?<=[.!?])\s+(?=[A-Z])', para)
             sentences.extend(sents)

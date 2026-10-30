@@ -29,6 +29,7 @@ class AtomInfo:
     tag: Optional[str] = None
     reason: str = ""
     evidence: List[str] = field(default_factory=list)
+    sources: List[str] = field(default_factory=list)
     retry_count: int = 0
 
 
@@ -58,9 +59,11 @@ class DefenseMiddleware:
         self._openai = openai_module
         self.max_workers = 20
         
-        self.graph = graph or GenealogyGraph(similarity_threshold=config.similarity_threshold)
+        self.graph = graph if graph is not None else GenealogyGraph(
+            similarity_threshold=config.similarity_threshold
+        )
         if config.use_local_embedding:
-            self.graph.set_local_model()
+            self.graph.set_local_model(config.embedding_model)
         
         self.decomposer = AtomicDecomposer(model=config.decomposer_model, openai_module=openai_module, 
                                            enable_cache=config.enable_decomposer_cache)
@@ -155,7 +158,8 @@ class DefenseMiddleware:
         
         return AtomInfo(
             content=atom, color=color, reason=reason,
-            evidence=classification.evidence[:2] if classification.evidence else []
+            evidence=classification.evidence[:2] if classification.evidence else [],
+            sources=list(classification.evidence_ids or []),
         )
     
     def _stage1_screen(self, atoms: List[str]) -> List[AtomInfo]:
@@ -174,7 +178,12 @@ class DefenseMiddleware:
                     color, reason = AtomColor.YELLOW, "New info"
                 with self._stats_lock:
                     self.stats[color.value] += 1
-                results.append(AtomInfo(content=atom, color=color, reason=reason, evidence=cls.evidence[:2]))
+                results.append(
+                    AtomInfo(
+                        content=atom, color=color, reason=reason,
+                        evidence=cls.evidence[:2], sources=list(cls.evidence_ids or []),
+                    )
+                )
             return results
         
         results = [None] * len(atoms)
@@ -213,6 +222,13 @@ class DefenseMiddleware:
     
     def _verify_single(self, atom: AtomInfo) -> AtomInfo:
         verification = self.verifier.verify(atom.content)
+        if verification.evidence:
+            atom.evidence = verification.evidence[:2]
+        atom.sources = [
+            source[len("lineage:"):]
+            for source in verification.source_urls
+            if isinstance(source, str) and source.startswith("lineage:")
+        ]
         
         if verification.result == VerifyResult.SUPPORTED:
             atom.color = AtomColor.GREEN
@@ -224,7 +240,6 @@ class DefenseMiddleware:
             atom.color = AtomColor.RED
             atom.tag = None
             atom.reason = "Contradicted by knowledge base"
-            atom.evidence = verification.evidence[:2]
             with self._stats_lock:
                 self.stats["verified_false"] += 1
         elif verification.result == VerifyResult.NO_EVIDENCE:
@@ -266,7 +281,7 @@ class DefenseMiddleware:
         for atom in atoms:
             if atom.color == AtomColor.GREEN:
                 self.graph.add(content=atom.content, agent_id=sender,
-                              status=VerificationStatus.VERIFIED, hop_count=1)
+                              status=VerificationStatus.VERIFIED, sources=atom.sources, hop_count=1)
                 send_buffer.append(atom)
             elif atom.color == AtomColor.RED:
                 if skip_blocking:
@@ -274,6 +289,13 @@ class DefenseMiddleware:
                 else:
                     rollback_queue.append(atom)
             else:
+                # Keep uncertain claims in the lineage for auditing, but
+                # never let them enter verified-fact retrieval.
+                self.graph.add(
+                    content=atom.content, agent_id=sender,
+                    status=VerificationStatus.UNVERIFIED,
+                    sources=atom.sources, hop_count=1,
+                )
                 send_buffer.append(atom)
         
         parts = []

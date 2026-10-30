@@ -1,3 +1,4 @@
+
 """
 unified configuration module
 """
@@ -43,7 +44,7 @@ class ExperimentConfig:
     output_dir: str = "outputs"
     log_file: str = "experiment_log.jsonl"
     
-    api_key: Optional[str] = 'your_api_key'
+    api_key: Optional[str] = None
     # proxy: Optional[str] = 'your_proxy_url'
     
     def __post_init__(self):
