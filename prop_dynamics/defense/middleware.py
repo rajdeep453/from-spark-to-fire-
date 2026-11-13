@@ -208,10 +208,17 @@ class DefenseMiddleware:
             if atom.color != AtomColor.YELLOW:
                 continue
             
+            # An atom that retrieved evidence but was classified as neutral
+            # may still contradict a trusted fact — the NLI score was merely
+            # inconclusive.  Send it to the verifier for a second opinion
+            # regardless of strategy, because letting a URL-swap attack
+            # through as "Unverified" is worse than the verification cost.
+            has_evidence = bool(atom.evidence)
+
             if self.strategy == "speed":
-                atom.tag = "Unverified"
+                atom.tag = "NEEDS_VERIFICATION" if has_evidence else "Unverified"
             elif self.strategy == "balanced":
-                if is_hub_related:
+                if is_hub_related or has_evidence:
                     atom.tag = "NEEDS_VERIFICATION"
                 else:
                     atom.tag = "Unverified"

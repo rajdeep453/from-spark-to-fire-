@@ -16,6 +16,7 @@ from prop_dynamics.attack.tasks import load_tasks
 from prop_dynamics.attack.injector import PayloadGenerator
 from prop_dynamics.attack.detector import create_detector
 from prop_dynamics.attack.frameworks import create_adapter, get_topology
+from prop_dynamics.guard.client import GuardClient, prepare_task_facts
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -43,6 +44,7 @@ def run_single_experiment(args):
     else:
         injection = payload_gen.generate(task, target_agent, strategy)
     
+    prepare_task_facts(GuardClient.from_env(), task)
     log = adapter.run_task(task, injection)
     
     detector = create_detector(injection)
@@ -94,6 +96,12 @@ def run_mega_experiment(
                             fw_name, scenario, strategy, task, r,
                             n_tasks, n_repeats, output_dir
                         ))
+
+    guard_client = GuardClient.from_env()
+    if guard_client is not None and len({item[3].id for item in all_args}) > 1:
+        raise ValueError(
+            "GUARD uses a shared fact store; run one distinct task per isolated GUARD database"
+        )
     
     total = len(all_args)
     all_logs = []

@@ -14,6 +14,7 @@ from .autogen_adapter import AutoGenAdapter
 from .crewai_adapter import CrewAIAdapter
 from .langgraph_adapter import LangGraphAdapter
 from .camel_adapter import CamelAdapter
+from prop_dynamics.guard.client import GuardClient, prepare_task_facts
 
 # Topology classification
 FRAMEWORKS = {
@@ -54,6 +55,11 @@ def run_exp1(
     
     os.makedirs(output_dir, exist_ok=True)
     tasks = load_tasks(os.path.join(os.path.dirname(__file__), "tasks.json"), n_tasks)
+    guard_client = GuardClient.from_env()
+    if guard_client is not None and len({task.id for task in tasks}) > 1:
+        raise ValueError(
+            "GUARD uses a shared fact store; run one distinct task per isolated GUARD database"
+        )
     
     all_results, all_logs = [], []
     
@@ -70,6 +76,7 @@ def run_exp1(
                 seed = stable_seed(base_seed, task.id, r)
                 config.seed = seed
                 injection = create_injection_config(task, entry_agent, seed)
+                prepare_task_facts(guard_client, task)
                 log = adapter.run_task(task, injection)
                 
                 if save_logs:

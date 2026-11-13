@@ -1,8 +1,9 @@
 {
-  "timestamp": "2026-10-16T23:29:30.935141",
+  "timestamp": "2026-11-12T22:10:36.073581",
   "config": {
     "n_tasks": 1,
-    "n_repeats": 1
+    "n_repeats": 1,
+    "base_seed": 42
   },
   "results": [
     {

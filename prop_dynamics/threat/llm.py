@@ -1,16 +1,18 @@
 """LLM call with retry."""
 
 import time
+from prop_dynamics.openai_compat import guard_agent_output
 
 
 def call_llm_with_retry(openai, model: str, messages: list, temperature: float, max_retries: int = 3):
     for attempt in range(max_retries):
         try:
-            resp = openai.ChatCompletion.create(
-                model=model,
-                messages=messages,
-                temperature=temperature
-            )
+            with guard_agent_output():
+                resp = openai.ChatCompletion.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature
+                )
             content = resp["choices"][0]["message"]["content"]
             tokens = resp.get("usage", {}).get("total_tokens", 0)
             return content, tokens

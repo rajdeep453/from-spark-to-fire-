@@ -271,6 +271,18 @@ def create_app(
             total = store.count()
         return {"deleted": fact_id, "total": total}
 
+    @app.delete("/facts/all", dependencies=[Depends(require_api_key)])
+    def delete_all_facts():
+        with graph_lock:
+            store = state["store"]
+            facts = store.list(limit=1000)
+            count = 0
+            for fact in facts:
+                if store.delete(fact["id"]):
+                    count += 1
+            total = store.count()
+        return {"deleted_count": count, "total": total}
+
     @app.post("/explain", dependencies=[Depends(require_api_key)])
     def explain(body: ClaimIn):
         try:

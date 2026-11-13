@@ -61,7 +61,16 @@ class NLIClassifier:
                 evidence=[], reason="No trusted facts to compare"
             )
         
-        best_fact = similar_facts[0][0]
+        best_fact, best_score = similar_facts[0]
+        # If the best evidence is too distant from the claim, the NLI model's
+        # judgment is unreliable — unrelated premise/hypothesis pairs produce
+        # random entailment/contradiction noise.  Return unknown instead.
+        if best_score < 0.3:
+            return ClassificationOutput(
+                result=ClassifyResult.YELLOW, confidence=0.4,
+                evidence=[best_fact.content], reason="No closely relevant trusted facts",
+                evidence_ids=[best_fact.id],
+            )
         evidence_list = [best_fact.content]
         evidence_ids = [best_fact.id]
         best_evidence = best_fact.content
@@ -97,10 +106,16 @@ class NLIClassifier:
         for i, atom in enumerate(atoms):
             similar_facts = graph.search(atom, top_k=top_k)
             if similar_facts:
-                best_fact = similar_facts[0][0]
-                pairs.append((best_fact.content, atom))
-                evidence_map[i] = [best_fact.content]
-                evidence_id_map[i] = [best_fact.id]
+                best_fact, best_score = similar_facts[0]
+                if best_score < 0.3:
+                    # Evidence too distant — skip NLI for this atom.
+                    pairs.append((None, atom))
+                    evidence_map[i] = [best_fact.content]
+                    evidence_id_map[i] = [best_fact.id]
+                else:
+                    pairs.append((best_fact.content, atom))
+                    evidence_map[i] = [best_fact.content]
+                    evidence_id_map[i] = [best_fact.id]
             else:
                 pairs.append((None, atom))
                 evidence_map[i] = []
@@ -128,7 +143,13 @@ class NLIClassifier:
         
         for i in range(len(atoms)):
             if results[i] is None:
-                results[i] = ClassificationOutput(ClassifyResult.YELLOW, 0.5, [], "No trusted facts")
+                ev = evidence_map.get(i, [])
+                ev_ids = evidence_id_map.get(i, [])
+                results[i] = ClassificationOutput(
+                    ClassifyResult.YELLOW, 0.4 if ev else 0.5, ev,
+                    "No closely relevant trusted facts" if ev else "No trusted facts",
+                    ev_ids,
+                )
         
         return results
 

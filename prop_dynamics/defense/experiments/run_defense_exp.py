@@ -38,6 +38,7 @@ from prop_dynamics.defense.frameworks.base import (
 from prop_dynamics.defense.tasks import load_tasks
 from prop_dynamics.attack.injector import PayloadGenerator
 from prop_dynamics.attack.detector import InfectionDetector
+from prop_dynamics.guard.client import GuardClient, prepare_task_facts
 
 DEFENSE_STRATEGIES = [
     "none", "speed", "balanced", "strict", "self_correction",
@@ -251,6 +252,8 @@ def run_single_experiment(args) -> Tuple[dict, dict]:
     start_time = time.time()
     
     fw_name, scenario, defense_strategy, attack_strategy, task, repeat_idx, openai_module = args
+
+    prepare_task_facts(GuardClient.from_env(), task)
     
     framework = create_framework(fw_name, openai_module)
     middleware = None
@@ -393,6 +396,11 @@ def run_defense_experiment(
         all_args = all_args[:limit_runs]
     
     total = len(all_args)
+    guard_client = GuardClient.from_env()
+    if guard_client is not None and len({item[4].id for item in all_args}) > 1:
+        raise ValueError(
+            "GUARD uses a shared fact store; run one distinct task per isolated GUARD database"
+        )
     all_results, all_logs = [], []
     
     results_path = os.path.join(output_dir, "defense_results.jsonl")

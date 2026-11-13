@@ -39,21 +39,45 @@ class FactStore:
         self._closed = False
         self._conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._ensure_schema()
+        self._graph_ids: Dict[int, str] = {}  # database id -> graph fact id
+        self.reload()
+
+    def _ensure_schema(self) -> None:
+        """Create the scoped schema or migrate the original global-only table."""
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS facts ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-            "content TEXT NOT NULL UNIQUE, "
+            "content TEXT NOT NULL, "
             "source TEXT NOT NULL DEFAULT 'manual', "
-            "created_at REAL NOT NULL)"
+            "scope TEXT NOT NULL DEFAULT 'global', "
+            "created_at REAL NOT NULL, "
+            "UNIQUE(scope, content))"
         )
         columns = {row["name"] for row in self._conn.execute("PRAGMA table_info(facts)")}
-        if "source" not in columns:
+        if "scope" in columns:
+            self._conn.commit()
+            return
+
+        # SQLite cannot add a uniqueness constraint to the legacy table.
+        # Rebuild it in one transaction and preserve existing row IDs.
+        legacy_source = "source" if "source" in columns else "'manual'"
+        with self._conn:
+            self._conn.execute("ALTER TABLE facts RENAME TO facts_legacy")
             self._conn.execute(
-                "ALTER TABLE facts ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'"
+                "CREATE TABLE facts ("
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                "content TEXT NOT NULL, "
+                "source TEXT NOT NULL DEFAULT 'manual', "
+                "scope TEXT NOT NULL DEFAULT 'global', "
+                "created_at REAL NOT NULL, "
+                "UNIQUE(scope, content))"
             )
-        self._conn.commit()
-        self._graph_ids: Dict[int, str] = {}  # database id -> graph fact id
-        self.reload()
+            self._conn.execute(
+                "INSERT INTO facts (id, content, source, scope, created_at) "
+                f"SELECT id, content, {legacy_source}, 'global', created_at FROM facts_legacy"
+            )
+            self._conn.execute("DROP TABLE facts_legacy")
 
     @staticmethod
     def _clean(content: str, field: str, max_length: int) -> str:
@@ -66,13 +90,23 @@ class FactStore:
             raise ValueError(f"{field} must be at most {max_length} characters")
         return text
 
+    @classmethod
+    def _clean_scope(cls, scope: str) -> str:
+        return cls._clean(scope, "scope", 200)
+
     def reload(self) -> int:
-        """Rebuild the in-memory graph from the database."""
+        """Rebuild the default graph from global facts only.
+
+        Task-scoped facts are loaded into a new graph for each check so that
+        concurrent or consecutive tasks cannot influence one another.
+        """
         with self._lock:
             self._ensure_open()
             self.graph.clear()
             self._graph_ids.clear()
-            rows = self._conn.execute("SELECT id, content FROM facts ORDER BY id").fetchall()
+            rows = self._conn.execute(
+                "SELECT id, content FROM facts WHERE scope = 'global' ORDER BY id"
+            ).fetchall()
             for row in rows:
                 fact = self.graph.add(
                     content=row["content"],
@@ -82,11 +116,11 @@ class FactStore:
                 self._graph_ids[row["id"]] = fact.id
             return len(rows)
 
-    def add(self, content: str, source: str = "manual") -> Dict:
+    def add(self, content: str, source: str = "manual", scope: str = "global") -> Dict:
         """Add one fact. Returns the stored row plus a 'created' flag."""
-        return self.add_many([content], source=source)[0]
+        return self.add_many([content], source=source, scope=scope)[0]
 
-    def add_many(self, contents: List[str], source: str = "manual") -> List[Dict]:
+    def add_many(self, contents: List[str], source: str = "manual", scope: str = "global") -> List[Dict]:
         """Atomically add a batch and keep the graph in sync with the database."""
         if isinstance(contents, (str, bytes)) or not isinstance(contents, list):
             raise TypeError("contents must be a list of strings")
@@ -94,6 +128,7 @@ class FactStore:
             raise ValueError("contents must not be empty")
         cleaned = [self._clean(content, "fact", 8000) for content in contents]
         source = self._clean(source, "source", 500)
+        scope = self._clean_scope(scope)
         with self._lock:
             self._ensure_open()
             try:
@@ -102,13 +137,14 @@ class FactStore:
                     for text in cleaned:
                         created_at = time.time()
                         cur = self._conn.execute(
-                            "INSERT OR IGNORE INTO facts (content, source, created_at) VALUES (?, ?, ?)",
-                            (text, source, created_at),
+                            "INSERT OR IGNORE INTO facts (content, source, scope, created_at) VALUES (?, ?, ?, ?)",
+                            (text, source, scope, created_at),
                         )
                         row = self._conn.execute(
-                            "SELECT id, content, source, created_at FROM facts WHERE content = ?", (text,)
+                            "SELECT id, content, source, scope, created_at FROM facts "
+                            "WHERE scope = ? AND content = ?", (scope, text)
                         ).fetchone()
-                        if cur.rowcount:
+                        if cur.rowcount and scope == "global":
                             fact = self.graph.add(
                                 content=text, agent_id=TRUSTED_AGENT,
                                 status=VerificationStatus.VERIFIED,
@@ -121,17 +157,25 @@ class FactStore:
                 self.reload()
                 raise
 
-    def list(self, limit: int = 100, offset: int = 0) -> List[Dict]:
+    def list(self, limit: int = 100, offset: int = 0, scope: Optional[str] = None) -> List[Dict]:
         if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
             raise ValueError("limit must be an integer between 1 and 1000")
         if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
             raise ValueError("offset must be a non-negative integer")
         with self._lock:
             self._ensure_open()
-            rows = self._conn.execute(
-                "SELECT id, content, source, created_at FROM facts ORDER BY id LIMIT ? OFFSET ?",
-                (limit, offset),
-            ).fetchall()
+            if scope is None:
+                rows = self._conn.execute(
+                    "SELECT id, content, source, scope, created_at FROM facts ORDER BY id LIMIT ? OFFSET ?",
+                    (limit, offset),
+                ).fetchall()
+            else:
+                scope = self._clean_scope(scope)
+                rows = self._conn.execute(
+                    "SELECT id, content, source, scope, created_at FROM facts "
+                    "WHERE scope = ? ORDER BY id LIMIT ? OFFSET ?",
+                    (scope, limit, offset),
+                ).fetchall()
             return [dict(r) for r in rows]
 
     def delete(self, fact_id: int) -> bool:
@@ -139,17 +183,77 @@ class FactStore:
             raise ValueError("fact_id must be a positive integer")
         with self._lock:
             self._ensure_open()
+            row = self._conn.execute("SELECT scope FROM facts WHERE id = ?", (fact_id,)).fetchone()
+            if row is None:
+                return False
             cur = self._conn.execute("DELETE FROM facts WHERE id = ?", (fact_id,))
             self._conn.commit()
-            if cur.rowcount == 0:
-                return False
-            self.reload()
-            return True
+            if cur.rowcount and row["scope"] == "global":
+                self.reload()
+            return bool(cur.rowcount)
 
-    def count(self) -> int:
+    def clear_scope(self, scope: str) -> int:
+        """Delete facts in one scope and return the number removed."""
+        scope = self._clean_scope(scope)
         with self._lock:
             self._ensure_open()
-            return self._conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+            cur = self._conn.execute("DELETE FROM facts WHERE scope = ?", (scope,))
+            self._conn.commit()
+            if scope == "global":
+                self.reload()
+            return int(cur.rowcount)
+
+    def count(self, scope: Optional[str] = None) -> int:
+        with self._lock:
+            self._ensure_open()
+            if scope is None:
+                return self._conn.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
+            scope = self._clean_scope(scope)
+            return self._conn.execute(
+                "SELECT COUNT(*) FROM facts WHERE scope = ?", (scope,)
+            ).fetchone()[0]
+
+    def graph_for_scope(self, scope: str) -> GenealogyGraph:
+        """Return a fresh graph containing global and requested scoped facts.
+
+        The returned graph is intentionally request-local. Middleware can add
+        lineage nodes while screening a message without contaminating a later
+        message or a different task.
+        """
+        scope = self._clean_scope(scope)
+        with self._lock:
+            self._ensure_open()
+            graph = GenealogyGraph(
+                embedding_dim=self.graph.embedding_dim,
+                similarity_threshold=self.graph.similarity_threshold,
+            )
+            # The template model is immutable after application startup and is
+            # shared by sentence-transformers internally. Reusing it avoids a
+            # model load for every request.
+            graph._local_model = self.graph._local_model
+            graph._embedding_func = self.graph._embedding_func
+            if scope == "global":
+                rows = self._conn.execute(
+                    "SELECT content FROM facts WHERE scope = 'global' ORDER BY id"
+                ).fetchall()
+            else:
+                rows = self._conn.execute(
+                    "SELECT content FROM facts WHERE scope IN ('global', ?) "
+                    "ORDER BY CASE scope WHEN 'global' THEN 0 ELSE 1 END, id",
+                    (scope,),
+                ).fetchall()
+            seen = set()
+            for row in rows:
+                content = row["content"]
+                if content in seen:
+                    continue
+                seen.add(content)
+                graph.add(
+                    content=content,
+                    agent_id=TRUSTED_AGENT,
+                    status=VerificationStatus.VERIFIED,
+                )
+            return graph
 
     def _ensure_open(self) -> None:
         if self._closed:

@@ -6,6 +6,7 @@ Cross-platform stage runner (Windows / Linux / Mac).  Usage:
     python run_stage.py defense   # Defense         (~1200 calls, resumable)
     python run_stage.py analyze   # builds attack summary tables
 Add  --tiny  for a ~20x smaller smoke test.
+Pass --guard to screen generated model responses through the running GUARD API.
 Pass --env env_groq.txt (or env_local.txt) or set the variables yourself. Reads OPENAI_BASE_URL / OPENAI_API_KEY / OPENAI_MODEL from the environment (see env_groq.txt / env_local.txt).
 """
 import argparse, json, os, sys, time
@@ -17,15 +18,26 @@ ap.add_argument("--tiny", action="store_true")
 ap.add_argument("--env", default=None, help="env file to load, e.g. env_groq.txt or env_local.txt")
 ap.add_argument("--workers", type=int, default=int(os.getenv("OPENAI_CONCURRENCY_LIMIT", "1")))
 ap.add_argument("--scenarios", default="rigid,quant,mmlu", help="attack/defense scenarios, comma separated")
+ap.add_argument("--guard", action="store_true", help="screen generated messages with the GUARD API")
 a = ap.parse_args()
 if a.env:
     for line in open(a.env, encoding="utf-8-sig"):
         line = line.split("#")[0].strip()
         if "=" in line:
             k, v = line.split("=", 1); os.environ[k.strip()] = v.strip()
+if a.guard:
+    os.environ["GUARD_ENABLED"] = "1"
+guard_enabled = os.getenv("GUARD_ENABLED", "0").strip().lower() in {"1", "true", "yes", "on"}
+if guard_enabled:
+    from prop_dynamics.guard.client import GuardClient
+    if GuardClient.from_env() is None:
+        raise SystemExit("GUARD_ENABLED is set, but GUARD is not configured")
+    os.environ.setdefault("GUARD_AUDIT_PATH", f"outputs/guarded/{a.stage}_audit.jsonl")
+    if a.stage == "attack" and len([s for s in a.scenarios.split(",") if s.strip()]) != 1:
+        raise SystemExit("Guarded attack runs must use one scenario per isolated GUARD database; pass --scenarios quant")
 T = a.tiny
 t0 = time.time()
-print(f"model={os.getenv('OPENAI_MODEL')} base={os.getenv('OPENAI_BASE_URL')} workers={a.workers} tiny={T}")
+print(f"model={os.getenv('OPENAI_MODEL')} base={os.getenv('OPENAI_BASE_URL')} workers={a.workers} tiny={T} guard={guard_enabled}")
 
 if a.stage == "p1":
     from prop_dynamics.run_v1_exp import run_v1_experiments
@@ -33,18 +45,22 @@ if a.stage == "p1":
     run_v1_experiments(questions=load_sample_questions(1 if T else 3),
                        topologies=["centralized", "layered", "decentralized"],
                        N=3 if T else 5, T_rounds=2 if T else 5, R_repeats=1 if T else 3,
-                       output_dir="outputs/v1_topology")
+                       output_dir="outputs/v1_topology_guarded" if guard_enabled else "outputs/v1_topology")
 
 elif a.stage == "threat":
     from prop_dynamics.threat.run_exp1 import run_exp1
     from prop_dynamics.threat.run_exp2 import run_exp2
     fws = ["camel", "crewai", "langgraph", "langchain", "metagpt", "autogen"]
-    run_exp1(n_tasks=1 if T else 5, n_repeats=1, frameworks=fws[:2] if T else fws)
-    run_exp2(n_tasks=1 if T else 5, n_repeats=1)
+    if guard_enabled:
+        run_exp1(n_tasks=1, n_repeats=1, frameworks=["crewai"], output_dir="outputs/threat_guarded/exp1")
+        run_exp2(n_tasks=1, n_repeats=1, frameworks=["crewai"], output_dir="outputs/threat_guarded/exp2")
+    else:
+        run_exp1(n_tasks=1 if T else 5, n_repeats=1, frameworks=fws[:2] if T else fws)
+        run_exp2(n_tasks=1 if T else 5, n_repeats=1)
 
 elif a.stage == "attack":
     import prop_dynamics.attack.experiments.run_mega_exp as m
-    base = "outputs/attack/mega_exp"
+    base = "outputs/attack/mega_exp_guarded" if guard_enabled else "outputs/attack/mega_exp"
     m.STRATEGIES = ["baseline", "compliance", "security_fud"]
     if T: m.FRAMEWORKS_LIST = ["langchain", "crewai"]
     for sc in a.scenarios.split(","):
@@ -73,6 +89,6 @@ elif a.stage == "defense":
         frameworks=["langgraph"] if T else ["langgraph", "autogen", "metagpt"],
         scenarios=["quant"] if T else ["quant", "mmlu"],
         defense_strategies=["none", "balanced"] if T else ["none", "balanced", "strict"],
-        attack_strategies=["compliance"], output_dir="outputs/defense/exp")
+        attack_strategies=["compliance"], output_dir="outputs/defense/exp_guarded" if guard_enabled else "outputs/defense/exp")
 
 print(f"done in {(time.time()-t0)/60:.1f} min")

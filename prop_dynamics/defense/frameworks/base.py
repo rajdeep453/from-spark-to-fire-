@@ -139,9 +139,12 @@ def call_llm(openai_module, model: str, messages: list,
     last_exc = None
     for attempt in range(retries + 1):
         try:
-            resp = openai_module.ChatCompletion.create(
-                model=model, messages=messages, temperature=temperature, max_tokens=max_tokens
-            )
+            from prop_dynamics.openai_compat import guard_agent_output
+
+            with guard_agent_output():
+                resp = openai_module.ChatCompletion.create(
+                    model=model, messages=messages, temperature=temperature, max_tokens=max_tokens
+                )
             usage = resp.get("usage", {}) or {}
             tokens = usage.get("total_tokens", 0)
             content = resp["choices"][0]["message"]["content"].strip()

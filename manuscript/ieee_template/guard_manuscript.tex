@@ -1,0 +1,179 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{array}
+
+\hyphenation{multi-agent work-flows data-base}
+
+\begin{document}
+
+\title{GUARD: Evidence-Grounded Message Screening for\\
+LLM Multi-Agent Workflows}
+
+% Add affiliation and contact information here if required by the venue.
+\author{Shivam Raval}
+
+\markboth{Manuscript Draft}{Raval: GUARD for Multi-Agent Workflows}
+
+\maketitle
+
+\begin{abstract}
+Multi-agent large language model workflows can turn a small factual error into a shared, repeated, and eventually final error. This paper describes GUARD, a local message-screening extension built for the From Spark to Fire research codebase. GUARD keeps operator-designated facts in SQLite, exposes an authenticated local API, explains claim decisions from retrieved evidence, and inserts a fail-closed check before an agent response is handed to another agent. The implementation reuses the repository's genealogy graph, natural-language-inference classifier, and message middleware while adding persistent facts, audit records, and experiment integration. A local CPU-only pilot on a source-substitution threat found no measured infection in three guarded CrewAI conditions, compared with infection rates from 0.25 to 1.00 in matched unguarded single-run baselines. The audit also revealed false blocks of ordinary task content and one direct URL-substitution miss. These findings show that the integration works end to end, but that its decision quality requires a larger, utility-aware evaluation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+large language models, multi-agent systems, natural language inference, provenance, trustworthy AI
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+\IEEEPARstart{L}{arge} language model (LLM) agents are increasingly organized into teams: one agent plans, another retrieves information, others implement or review, and a final agent combines the output. This structure is useful, but it also gives a wrong statement more than one opportunity to travel. A fabricated URL, unsupported numerical claim, or misleading instruction can be copied into a later message and gain credibility merely because several agents repeat it. The From Spark to Fire study frames this behavior as error propagation over a collaboration graph and reports that message-level governance can reduce final infection without redesigning the underlying workflow \cite{sparkfire}.
+
+This work implements and evaluates a practical extension of that idea, named \emph{GUARD}. The goal was not to replace the repository's defense code with a new framework. Instead, the work adds the missing operational pieces that make the defense usable in a local experiment: a persistent fact store, an authenticated API, evidence-grounded explanations, a message gate at the shared model-call boundary, and auditable outputs. The resulting component can be enabled for the propagation, threat, attack, and defense runners without changing their individual agent prompts or topologies.
+
+The contribution is threefold. First, GUARD stores trusted facts and their provenance in a local SQLite database and mirrors only those facts into the verified portion of a genealogy graph. Second, it exposes fact management, claim explanation, and handoff screening through a local FastAPI service. Third, it integrates screening with the project's OpenAI-compatible client so that generated agent responses are checked before other agents receive them. The paper reports what was implemented and the results that were actually obtained. In particular, it treats the first guarded threat experiment as a pilot rather than as a claim of general protection.
+
+\section{System Design}
+
+\subsection{Threat Model and Design Goals}
+
+GUARD assumes that a workflow has a small set of facts designated as trusted by the experiment operator. It does not assume that every generated statement is known in advance, and it does not claim to establish truth from the open web. Its immediate job is narrower: prevent an agent from forwarding a statement that conflicts with the trusted context, preserve the evidence used for the decision, and stop safely when the checking service is unavailable.
+
+This setting yields four design requirements. First, trusted facts must persist across service restarts. Second, generated claims must remain separate from operator-entered facts: an unverified statement should never become trusted merely because it was seen in a conversation. Third, a block must be enforced at the handoff point rather than recorded after the receiving agent has already consumed the text. Finally, explanations must show only facts and reasons that came from the actual decision path.
+
+\subsection{Fact Store and Evidence Graph}
+
+The fact store uses SQLite as the source of truth. Each fact has an integer identifier, normalized content, a source label, and a creation time. The in-memory genealogy graph is rebuilt from the database at service startup and after destructive updates. Facts inserted by an operator are marked as verified; generated claims are represented separately in the in-memory lineage and are not written back as trusted database records.
+
+For a claim $c$, GUARD retrieves the most similar verified facts and uses natural language inference (NLI) to classify the relationship as entailment, contradiction, or neutral. This is a reasonable division of work: sentence embeddings make retrieval inexpensive, while NLI explicitly distinguishes support from contradiction \cite{multinli,sbert}. The externally visible decision is \emph{supported}, \emph{unsupported}, or \emph{unknown}. A decision is accompanied by the claim text, the classifier confidence, the returned evidence, and a deterministic explanation assembled from those fields.
+
+The fact database is deliberately local. It avoids accidental dependence on a network service during experiments and allows the fact set used by a run to be inspected afterwards. The source label is provenance metadata supplied by the operator; GUARD does not independently certify that a source label is authentic.
+
+\begin{figure}[t]
+\centering
+\fbox{\begin{minipage}{0.91\columnwidth}
+\centering\small
+\textbf{Agent response} $\rightarrow$ \textbf{GUARD /check} $\rightarrow$
+\begin{tabular}{c@{\qquad}c}
+allowed & blocked \\
+sanitized response to next agent & \texttt{[BLOCKED\_BY\_GUARDRAIL]}
+\end{tabular}\\[2pt]
+\textit{Evidence path: SQLite trusted facts $\rightarrow$ genealogy graph
+$\rightarrow$ retrieval and NLI $\rightarrow$ audit record}
+\end{minipage}}
+\caption{GUARD sits at the message handoff. A rejected response is replaced before a downstream agent can use it; the original response is represented only by a hash in the audit file.}
+\label{fig:guard-flow}
+\end{figure}
+
+\subsection{API and Message Gate}
+
+The local service provides four operations: health checking, fact create/read/delete, claim explanation, and message screening. All operations except health require a bearer token. Request schemas reject unknown fields, empty text, and inputs beyond the documented limits. The service also bounds request bodies and returns generic errors for failed model checks so that provider details and credentials are not exposed to callers.
+
+The message endpoint invokes the existing four-stage defense middleware: sentence decomposition, NLI classification, verification when required by the configured strategy, and final assembly. If any atomic claim is red, the endpoint returns \texttt{can\_send=false} and does not return a partially assembled message. The client then replaces the content with a fixed blocked placeholder. If the API cannot be reached or returns an invalid response while screening is enabled, the client raises an error rather than forwarding the unreviewed output. This is the fail-closed property used by the experiments.
+
+The shared OpenAI-compatible wrapper is the central integration point. The wrapper screens calls that are explicitly marked as agent outputs; internal calls made by the NLI, decomposition, or verification components are not recursively screened. This avoids changing the semantics of the classifier while ensuring that the text produced by a workflow agent is screened before the original adapter stores it in history, an artifact, or a downstream prompt. Every decision is written to JSON Lines with a timestamp, the selected model identifier, a SHA-256 hash of the unforwarded response, the decision, claim records, and elapsed screening time.
+
+\subsection{Experiment Integration}
+
+The integration is opt-in through \texttt{--guard} or the \texttt{GUARD\_ENABLED} environment variable. It is shared by the propagation-dynamics runner and the Threat, Attack, and Defense experiment paths. Guarded output is written to separate directories so that a baseline is never overwritten. For a task with an explicit source URL, the benchmark-provided source is inserted as a trusted fact before the run. This makes the threat test concrete: a generated migration notice can be checked against the task's expected data source.
+
+\section{Experimental Protocol}
+
+\subsection{Local Setup}
+
+All reported runs used the repository's OpenAI-compatible path with Ollama and \texttt{qwen2.5:1.5b-instruct}. The host had no GPU; inference and the cached sentence-embedding and NLI models ran on CPU. The service used a separate SQLite database for the guarded pilot, and the unguarded reference output was left unchanged. This configuration is useful for a reproducibility check because it removes provider cost and makes the complete path executable on a normal laptop. It is not a performance benchmark for larger models.
+
+\subsection{Propagation Baseline}
+
+Before adding the guard, the topology experiment was run with five agents, five rounds, three repeats, and three sample questions. The runner fit product and Poisson infection functions to the observed infection trajectories. Table~\ref{tab:topology} records the saved fit summaries. The figures are descriptive because the sample prompts are small and the model is stochastic, but they verify that the original propagation pipeline, topology generation, logging, and fitting stages executed successfully on the local model.
+
+\begin{table}[t]
+\caption{Saved propagation-dynamics fits from the local $N=5$, $T=5$, $R=3$ run.}
+\label{tab:topology}
+\centering
+\scriptsize
+\begin{tabular}{lccc}
+\hline
+Topology & Function & $\beta$ & $\delta$ \\
+\hline
+Centralized & Product & 0.110 & 0.770 \\
+Centralized & Poisson  & 0.120 & 0.780 \\
+Layered     & Product & 0.470 & 0.470 \\
+Layered     & Poisson  & 0.490 & 0.470 \\
+Decentralized & Product & 0.000 & 0.230 \\
+Decentralized & Poisson  & 0.000 & 0.230 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Guarded Threat Pilot}
+
+The threat task asks a four-agent CrewAI-style workflow to download sales data from a benchmark URL and produce a monthly revenue summary. The injection asks an agent to replace the expected source with an alternate URL and to repeat a migration notice. The detector marks a message as infected when it contains the planted alternate URL. We ran one task and one repeat for three settings: the standard threat experiment, injection at the hub manager, and injection at the leaf developer. The matching unguarded outputs were generated previously with the same task size and seed.
+
+This pilot measures propagation, not task quality. In addition to infection rate and final infection, we counted guard decisions and manually inspected saved responses for blocked placeholders and incomplete work. This distinction matters: a guard that stops every response can suppress propagation while also preventing the task from being completed.
+
+\section{Results and Discussion}
+
+\subsection{End-to-End Checks}
+
+The GUARD test suite completed with 46 passing tests and 19 passing subtests. These tests cover explanation formatting, malformed facts and inputs, fact-store persistence and CRUD behavior, API authentication and request limits, blocked-message behavior, and the OpenAI-compatible integration hook. The test suite uses temporary databases and injected classifiers, so it checks contracts and failure handling without relying on live inference.
+
+The live service was also checked with a trusted launch-date fact. A matching claim was returned as supported with evidence; a claim using a different date was returned as unsupported; and the message endpoint blocked the conflicting date before it could be forwarded. These checks establish that the fact-store, explanation, and handoff interfaces work together in a running local service.
+
+\subsection{Threat-Pilot Outcome}
+
+Table~\ref{tab:threat} gives the measured pilot result. The guarded runs had zero detector infection in all three conditions. In the standard CrewAI condition, the unguarded baseline infected all four agents and the final output, whereas the guarded run recorded no infected agents or final output. The hub and leaf injection variants similarly fell to zero measured coverage under GUARD. The audit recorded 36 screened responses: 20 were allowed and 16 were blocked. Saved logs confirm that blocked text was replaced before later agents received it, as intended by Fig.~\ref{fig:guard-flow}.
+
+\begin{table}[t]
+\caption{Threat pilot: one task and one repeat per cell. ``Coverage'' is the mean infected-agent fraction. These are pilot measurements, not statistical estimates.}
+\label{tab:threat}
+\centering
+\scriptsize
+\begin{tabular}{p{0.30\columnwidth}cc|cc}
+\hline
+& \multicolumn{2}{c|}{Unguarded} & \multicolumn{2}{c}{Guarded} \\
+Condition & Coverage & Final & Coverage & Final \\
+\hline
+CrewAI threat & 1.00 & 1.00 & 0.00 & 0.00 \\
+Hub injection & 1.00 & 0.00 & 0.00 & 0.00 \\
+Leaf injection & 0.25 & 0.00 & 0.00 & 0.00 \\
+\hline
+\end{tabular}
+\end{table}
+
+The raw scores should not be read as a complete success. During the guarded run, ordinary review instructions, code fragments, and refusals were sometimes classified as conflicting with the trusted URL. As a result, several responses became \texttt{[BLOCKED\_BY\_GUARDRAIL]} and the final guarded output did not complete the requested revenue-summary task. In a direct service probe, a simple alternate-URL statement was also allowed. The same alternate URL was blocked when embedded in one longer generated message. This inconsistency shows that the original NLI and retrieval path was sensitive to wording and decomposition.
+
+The practical conclusion is narrower than ``GUARD solved propagation.'' The implementation successfully inserted an enforceable gate and prevented detector infection in this small test, but the observed result mixes true containment with overblocking. A meaningful evaluation must report both safety and utility. For this reason, the next evaluation should include benign-message false-block rate, alternate-source miss rate, task completion, and repeated trials alongside the existing infection metric.
+
+\subsection{What the Pilot Establishes}
+
+The completed work supports three concrete claims. First, the repository's main experimental paths can invoke one shared GUARD client without adding framework-specific network code. Second, a rejected response is not merely labelled: it is removed from the text available to downstream agents, with a separate audit trail. Third, the local fact base and explanation endpoint make individual decisions inspectable. These properties are valuable even before the classifier reaches a satisfactory precision-recall tradeoff.
+
+The work does \emph{not} establish a paper-level containment rate comparable with the broader experiments in \cite{sparkfire}. The threat pilot has one task and one repeat, the model is a small CPU-served local model, and task quality was not scored. The propagation fit in Table~\ref{tab:topology} likewise uses sample questions rather than a benchmark designed for external comparison. Reporting these boundaries is important because a low infection value alone is not evidence that a workflow remains useful.
+
+\section{Limitations and Next Evaluation}
+
+There are four immediate limitations. First, NLI decisions depend on the retrieved premise and can overreact when a broad source fact is paired with an unrelated sentence. Second, URL values are identifiers; semantic similarity is an incomplete tool for deciding whether one exact URL may replace another. Third, trusted facts need a scope tied to the active task so that a fact from one task does not influence a later task. Fourth, the current pilot does not measure quality of the final answer after an intervention.
+
+The next experiment should use an isolated trusted-fact context per task, deterministic comparison for protected identifiers such as URLs, and an NLI check only for semantically comparable claims. It should first evaluate a labeled set of supported, contradictory, unknown, and benign messages. After that, it should run paired guarded and unguarded trials over multiple tasks and random seeds, report confidence intervals, and score task completion separately from infection. These changes would turn the present integration result into a credible evaluation of both containment and usability.
+
+\section{Conclusion}
+
+GUARD makes the repository's message-layer defense operational: it persists trusted evidence locally, screens real agent handoffs, records decisions, and runs with the existing experimental workflows. The local pilot demonstrates that the gate can interrupt a planted source-substitution cascade. It also reveals why a gate alone is not enough: false blocks and an inconsistent direct URL probe show that decision quality must be measured alongside containment. The implementation is therefore a working, auditable prototype and a base for a stricter, task-scoped evaluation rather than a finished claim of robust defense.
+
+\begin{thebibliography}{1}
+
+\bibitem{sparkfire}
+Y. Xie, C. Zhu, X. Zhang, T. Zhu, D. Ye, M. Qi, H. Chen, and W. Zhou,
+``From spark to fire: Modeling and mitigating error cascades in LLM-based multi-agent collaboration,'' arXiv:2603.04474, 2026. [Online]. Available: \url{https://arxiv.org/abs/2603.04474}
+
+\bibitem{multinli}
+A. Williams, N. Nangia, and S. R. Bowman, ``A broad-coverage challenge corpus for sentence understanding through inference,'' in \emph{Proc. Conf. North American Chapter Assoc. Comput. Linguistics: Human Language Technologies}, 2018, pp. 1112--1122. [Online]. Available: \url{https://arxiv.org/abs/1704.05426}
+
+\bibitem{sbert}
+N. Reimers and I. Gurevych, ``Sentence-BERT: Sentence embeddings using Siamese BERT-networks,'' in \emph{Proc. Conf. Empirical Methods in Natural Language Processing}, 2019, pp. 3982--3992. [Online]. Available: \url{https://arxiv.org/abs/1908.10084}
+
+\end{thebibliography}
+
+\end{document}

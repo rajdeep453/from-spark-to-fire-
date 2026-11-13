@@ -10,6 +10,7 @@ from .detector import InfectionDetector, compute_metrics
 from .crewai_adapter import CrewAIAdapter
 from .langgraph_adapter import LangGraphAdapter
 from .run_exp1 import load_tasks
+from prop_dynamics.guard.client import GuardClient, prepare_task_facts
 
 STAR_FRAMEWORKS = {
     "crewai": {
@@ -36,6 +37,11 @@ def run_exp2(
     
     os.makedirs(output_dir, exist_ok=True)
     tasks = load_tasks(os.path.join(os.path.dirname(__file__), "tasks.json"), n_tasks)
+    guard_client = GuardClient.from_env()
+    if guard_client is not None and len({task.id for task in tasks}) > 1:
+        raise ValueError(
+            "GUARD uses a shared fact store; run one distinct task per isolated GUARD database"
+        )
     
     all_results, all_logs = [], []
     
@@ -55,6 +61,7 @@ def run_exp2(
                     seed = stable_seed(base_seed, task.id, r)
                     config.seed = seed
                     injection = create_injection_config(task, target_agent, seed)
+                    prepare_task_facts(guard_client, task)
                     log = adapter.run_task(task, injection)
                     
                     if save_logs:

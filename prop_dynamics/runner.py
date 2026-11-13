@@ -55,9 +55,12 @@ class MessageBoard:
 
 
 def generate_answer(openai, model: str, messages: List[dict], max_retries: int = 3) -> dict:
+    from prop_dynamics.openai_compat import guard_agent_output
+
     for attempt in range(max_retries):
         try:
-            return openai.ChatCompletion.create(model=model, messages=messages, n=1)
+            with guard_agent_output():
+                return openai.ChatCompletion.create(model=model, messages=messages, n=1)
         except Exception as e:
             print(f"API error (attempt {attempt + 1}): {e}")
             if attempt < max_retries - 1:
